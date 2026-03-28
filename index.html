@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earn Stream 💎</title>
+    <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --primary: #00ffcc; --bg: #0b0f19; --card: #161b2c; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .card { background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 85%; max-width: 340px; text-align: center; border: 2px solid rgba(0, 255, 204, 0.1); }
+        h1 { font-size: 26px; margin: 10px 0; color: var(--primary); text-shadow: 0 0 10px rgba(0,255,204,0.3); }
+        .stats-container { display: flex; justify-content: space-between; margin: 25px 0; gap: 10px; }
+        .stat-box { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 18px; flex: 1; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-label { font-size: 11px; color: #8b949e; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-val { font-size: 18px; font-weight: 800; color: #fff; }
+        .btn { background: linear-gradient(135deg, #00ffcc, #0099ff); color: #000; border: none; padding: 18px; font-size: 18px; border-radius: 20px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.3s; box-shadow: 0 8px 20px rgba(0,255,204,0.2); }
+        .btn:active { transform: scale(0.96); }
+        .btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
+        #timer-box { background: rgba(248, 113, 113, 0.1); padding: 15px; border-radius: 15px; margin-top: 15px; display: none; border: 1px dashed #f87171; }
+        #timeLeft { color: #f87171; font-size: 20px; font-weight: bold; }
+        .footer { margin-top: 25px; font-size: 11px; color: #4b5563; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div style="font-size: 40px;">🚀</div>
+        <h1>Earn Stream</h1>
+        <p style="color: #8b949e; font-size: 13px;">Watch & Collect Your Rewards! 💸</p>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <span class="stat-label">📅 Today</span>
+                <span id="countDisplay" class="stat-val">0/20</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">🔥 Session</span>
+                <span id="sessionDisplay" class="stat-val">0/5</span>
+            </div>
+        </div>
+
+        <button id="adBtn" class="btn" onclick="startAdProcess()">📺 WATCH VIDEO AD</button>
+        
+        <div id="timer-box">
+            <div style="font-size: 12px; color: #f87171; margin-bottom: 5px;">⏳ NEXT AD IN</div>
+            <span id="timeLeft">00:00</span>
+        </div>
+        
+        <div class="footer">⚡ Secure Payments • ID: 26128 🔒</div>
+    </div>
+
+    <script>
+        // Maine yahan aapki ID add kar di hai 👇
+        const blockId = "26128"; 
+        const AdController = window.Adsgram.init({ blockId: blockId });
+        
+        let dailyCount = parseInt(localStorage.getItem('dailyCount')) || 0;
+        let sessionCount = parseInt(localStorage.getItem('sessionCount')) || 0;
+        let lastReset = localStorage.getItem('lastReset');
+        let cooldownEnd = parseInt(localStorage.getItem('cooldownEnd')) || 0;
+
+        const today = new Date().toDateString();
+        if (lastReset !== today) {
+            dailyCount = 0; sessionCount = 0;
+            localStorage.setItem('dailyCount', 0);
+            localStorage.setItem('sessionCount', 0);
+            localStorage.setItem('lastReset', today);
+        }
+
+        function updateUI() {
+            document.getElementById('countDisplay').innerText = `📊 ${dailyCount}/20`;
+            document.getElementById('sessionDisplay').innerText = `💎 ${sessionCount}/5`;
+            checkCooldown();
+        }
+
+        function checkCooldown() {
+            const now = Date.now();
+            if (dailyCount >= 20) {
+                disableBtn("🚫 DAILY LIMIT FULL");
+            } else if (now < cooldownEnd) {
+                startTimer(cooldownEnd - now);
+            } else {
+                enableBtn();
+            }
+        }
+
+        function startAdProcess() {
+            const btn = document.getElementById('adBtn');
+            btn.innerText = "🌀 LOADING...";
+            
+            AdController.show().then(() => {
+                dailyCount++;
+                sessionCount++;
+                localStorage.setItem('dailyCount', dailyCount);
+                localStorage.setItem('sessionCount', sessionCount);
+                
+                if (sessionCount >= 5) {
+                    cooldownEnd = Date.now() + (60 * 60 * 1000); // 1 Hour Gap
+                    localStorage.setItem('cooldownEnd', cooldownEnd);
+                    localStorage.setItem('sessionCount', 0);
+                }
+                updateUI();
+                alert("🎉 Success! Reward Added 💰");
+            }).catch(() => {
+                updateUI();
+                alert("❌ Ad not finished.");
+            });
+        }
+
+        function startTimer(duration) {
+            document.getElementById('timer-box').style.display = 'block';
+            const btn = document.getElementById('adBtn');
+            btn.disabled = true;
+            btn.innerText = "⏳ ON BREAK";
+            
+            const timerInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = cooldownEnd - now;
+                if (diff <= 0) {
+                    clearInterval(timerInterval);
+                    enableBtn();
+                } else {
+                    const mins = Math.floor((diff / 1000 / 60) % 60);
+                    const secs = Math.floor((diff / 1000) % 60);
+                    document.getElementById('timeLeft').innerText = `🕒 ${mins}m ${secs}s`;
+                }
+            }, 1000);
+        }
+
+        function disableBtn(msg) { document.getElementById('adBtn').disabled = true; document.getElementById('adBtn').innerText = msg; }
+        function enableBtn() { 
+            document.getElementById('adBtn').disabled = false; 
+            document.getElementById('adBtn').innerText = "📺 WATCH VIDEO AD";
+            document.getElementById('timer-box').style.display = 'none';
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
